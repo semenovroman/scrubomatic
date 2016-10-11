@@ -1,15 +1,18 @@
 package ceph
 
 import (
+  _ "fmt"
   "log"
   "os/exec"
   "encoding/json"
+  "strings"
 )
 
-// check out if nil, if it is don't unmarshal, just return
-func runCephCommand(command []string, out interface{}) error {
+func runCephCommand(command string, out interface{}) error {
 
-    command_out, err := exec.Command(command[0], command[1:]...).Output()
+    cmd := strings.Split(command, " ")
+
+    command_out, err := exec.Command(cmd[0], cmd[1:]...).Output()
     if err != nil { log.Fatal(err) }
 
     if out == nil {

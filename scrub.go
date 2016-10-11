@@ -18,7 +18,11 @@ func main() {
 	// viper.GetString("db_user")
 
 	// pass all settings
-	scrubomatic := ceph.New("sudo docker exec c3d /usr/bin/ceph")
+	settings := ceph.Settings{
+								Ceph_binary: "sudo docker exec 291 /usr/bin/ceph",
+								PG_list_stale: 15,
+							}
 
+	scrubomatic := ceph.New(settings)
 	scrubomatic.DeepScrub()
 }
