@@ -3,7 +3,7 @@ package pgs
 import (
   "ceph"
   "ceph/checks"
-  _ "ceph/checks/health"
+  "ceph/checks/health"
 
   "time"
   "log"
@@ -75,8 +75,9 @@ func Check_pg(c *ceph.Ceph, pg ceph.PG_info) bool {
 		return false
 	}
 
-	if checks.HealthCheck(c) != "HEALTH_WARN" {
+	if cr := health.Check(c, pg); cr > 0 {
 		fmt.Printf("Cluster is not healthy, not scrubbing\n")
+    time.Sleep(time.Duration(cr) * time.Second)
 
 		return false
 	}
