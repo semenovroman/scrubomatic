@@ -3,6 +3,7 @@ package pgs
 import (
   "ceph"
   "ceph/checks"
+  _ "ceph/checks/health"
 
   "time"
   "log"
