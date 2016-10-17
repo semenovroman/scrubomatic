@@ -75,8 +75,13 @@ func Check_pg(c *ceph.Ceph, pg ceph.PG_info) bool {
 		return false
 	}
 
+  // do this for all checks
+  // move all checks to separate packages implementing interface
+  // initial Ceph.settings should have a list of checks to run
+  // (and later params for checks)
+  // create a mapping [string]checkInterface and iterate over it...
 	if cr := health.Check(c, pg); cr > 0 {
-		fmt.Printf("Cluster is not healthy, not scrubbing\n")
+		fmt.Println(health.GetFailureMessage())
     time.Sleep(time.Duration(cr) * time.Second)
 
 		return false

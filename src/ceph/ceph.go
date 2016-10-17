@@ -25,6 +25,7 @@ type Settings struct {
 
 type CephCheck interface {
   Check(*Ceph, PG_info) int
+  GetFailureMessage() string
 }
 
 // TODO:
