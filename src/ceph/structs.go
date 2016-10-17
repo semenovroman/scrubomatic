@@ -1,11 +1,11 @@
 package ceph
 
 
-type ceph_health struct {
+type Ceph_health struct {
 	Overall_status string
 }
 
-type pgs_state struct {
+type PGS_state struct {
 	Write_bytes_sec uint64
 	Read_bytes_sec uint64
 	Io_sec uint64
@@ -15,7 +15,7 @@ type pgs_state struct {
 	}
 }
 
-type pg_query struct {
+type PG_query struct {
 	State string
 	Info struct {
 		PG_id string `json:"pgid"`

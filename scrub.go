@@ -2,6 +2,7 @@ package main
 
 import (
 	"ceph"
+	"ceph/pgs"
 	"github.com/spf13/viper"
 )
 
@@ -19,10 +20,11 @@ func main() {
 
 	// pass all settings
 	settings := ceph.Settings{
-								Ceph_binary: "sudo docker exec 291 /usr/bin/ceph",
+								Ceph_binary: "sudo docker exec 2f7 /usr/bin/ceph",
 								PG_list_stale: 15,
 							}
 
 	scrubomatic := ceph.New(settings)
-	scrubomatic.DeepScrub()
+	// scrubomatic.DeepScrub()
+	pgs.DeepScrub(scrubomatic)
 }

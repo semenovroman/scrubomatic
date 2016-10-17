@@ -8,7 +8,7 @@ import (
   "strings"
 )
 
-func runCephCommand(command string, out interface{}) error {
+func RunCephCommand(command string, out interface{}) error {
 
     cmd := strings.Split(command, " ")
 
