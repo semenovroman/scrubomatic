@@ -20,7 +20,7 @@ func main() {
 
 	// pass all settings
 	settings := ceph.Settings{
-								Ceph_binary: "sudo docker exec 2f7 /usr/bin/ceph",
+								Ceph_binary: "sudo docker exec ec2 /usr/bin/ceph",
 								PG_list_stale: 15,
 							}
 
