@@ -23,7 +23,7 @@ func (cs *ConcurrentScrubs) Check(c *ceph.Ceph, pg ceph.PG_info) string {
   if err != nil { log.Fatal(err) }
 
   for _, pgs := range pgs_scrubbing.Num_pg_by_state {
-    if pgs.Name == "active+clean+deep-scrubbing" {
+    if pgs.Name == "active+clean+deep+scrubbing" {
       if pgs.Num > cs.concurrentScrubs {
         return "CHECK_WAIT"
       }

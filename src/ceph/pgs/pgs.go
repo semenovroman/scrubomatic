@@ -92,12 +92,23 @@ func Scrub_pg(c *ceph.Ceph, pg ceph.PG_info) {
 }
 
 func Check_pg(c *ceph.Ceph, pg ceph.PG_info) bool {
+    
     for name, check := range checks_map {
         switch cr := check.Check(c, pg); cr {
             case "CHECK_WAIT": {
                 fmt.Println(name + " " + check.GetFailureMessage())
                 time.Sleep(3 * time.Second)
-                // re-run for loop?
+
+                for {
+                    switch rerun := check.Check(c, pg); rerun {
+                        case "CHECK_WAIT": {
+                            time.Sleep(3 * time.Second)
+                        }
+                        case "CHECK_SKIP": {
+                            return false
+                        }
+                    }
+                }
             }
             case "CHECK_SKIP": {
                 fmt.Println(name + " skipping pg")
