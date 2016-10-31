@@ -3,6 +3,7 @@ package health
 import (
   "ceph"
   "log"
+  "strings"
 )
 
 type Health struct {
@@ -22,7 +23,7 @@ func (h *Health) Check(c *ceph.Ceph, pg ceph.PG_info) string {
   err := ceph.RunCephCommand(c.Health_detail_command, &health)
   if err != nil { log.Fatal(err) }
 
-  if health.Overall_status != h.good_status {
+  if strings.Compare(health.Overall_status, h.good_status) != 0 {
     return "CHECK_WAIT"
   }
 
@@ -30,5 +31,5 @@ func (h *Health) Check(c *ceph.Ceph, pg ceph.PG_info) string {
 }
 
 func (h *Health) GetFailureMessage() string {
-  return failMessage
+  return "Cluster health status is not OK: " + h.good_status
 }

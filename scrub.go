@@ -16,15 +16,18 @@ func main() {
 	viper.SetConfigName("scrubomatic")
 	viper.ReadInConfig()
 
-	// viper.GetString("db_user")
-
-	// pass all settings
 	settings := ceph.Settings{
-								Ceph_binary: "sudo docker exec ec2 /usr/bin/ceph",
-								PG_list_stale: 15,
+								Ceph_binary: viper.GetString("ceph_binary"),
+								PG_list_stale: viper.GetInt("pg_list_stale"),
+								Health_status: viper.GetString("checks.health.status"),
+								Last_scrub: viper.GetInt("checks.last_scrub.hours"),
+								Last_change: viper.GetInt("checks.last_change.minutes"),
+								Io_reads: viper.GetInt("checks.io.reads"),
+								Io_writes: viper.GetInt("checks.io.writes"),
+								Io_ops: viper.GetInt("checks.io.ops"),
+								Concurrent_scrubs: viper.GetInt("concurrent_scrubs"),
 							}
 
 	scrubomatic := ceph.New(settings)
-	// scrubomatic.DeepScrub()
 	pgs.DeepScrub(scrubomatic)
 }

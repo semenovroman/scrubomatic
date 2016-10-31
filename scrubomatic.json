@@ -1,0 +1,21 @@
+{
+	"ceph_binary": "ceph",
+	"pg_list_stale": 1,
+	"concurrent_scrubs" : 0,
+	"checks" : {
+		"health": {
+			"status": "HEALTH_OK"
+		},
+		"last_scrub": {
+			"hours": 24
+		},
+		"last_change": {
+			"minutes": 3
+		},
+		"io": {
+			"reads": 104857600,
+			"writes": 104857600,
+			"ops": 8000
+		}
+	}
+}

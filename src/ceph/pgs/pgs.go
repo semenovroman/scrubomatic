@@ -14,16 +14,16 @@ import (
     "sort"
 )
 
-var checks_map map[string]ceph.CephCheck
 
 func DeepScrub(c *ceph.Ceph) {
 
-    checks_map := make(map[string]ceph.CephCheck)
-    checks_map["health"] = health.New("HEALTH_WARN")
-    checks_map["last_srub"] = last_scrub.New(-999)
-    checks_map["last_change"] = last_change.New(-999)
-    checks_map["io"] = io.New(1024 * 1024, 1024 * 1024, 1024 * 1024)
-    checks_map["concurrent_scrubs"] = concurrent_scrubs.New(0)
+    // TEMP HACK
+    c.Checks_map = make(map[string]ceph.CephCheck)
+    c.Checks_map["health"] = health.New(c.Health_status)
+    c.Checks_map["last_srub"] = last_scrub.New(c.Last_scrub)
+    c.Checks_map["last_change"] = last_change.New(c.Last_change)
+    c.Checks_map["io"] = io.New(uint64(c.Io_writes), uint64(c.Io_reads), uint64(c.Io_ops))
+    c.Checks_map["concurrent_scrubs"] = concurrent_scrubs.New(uint(c.Concurrent_scrubs))
 
     for {
         pgs_list := GetPGsList(c)
@@ -31,7 +31,6 @@ func DeepScrub(c *ceph.Ceph) {
         for _, pg := range pgs_list {
             if time.Now().Sub(c.Last_pg_list_update) > c.PG_list_stale {
                 fmt.Printf("PG list is stale, refreshing... %v\n", c.Last_pg_list_update)
-                time.Sleep(5 * time.Second)
 
                 break
             }
@@ -42,6 +41,7 @@ func DeepScrub(c *ceph.Ceph) {
         }
     }
 }
+
 
 func GetPGsList(c *ceph.Ceph) ceph.PGSByDate {
 
@@ -56,12 +56,13 @@ func GetPGsList(c *ceph.Ceph) ceph.PGSByDate {
     return pg_list
 }
 
+
 func Scrub_pg(c *ceph.Ceph, pg ceph.PG_info) {
 
     last_deep_scrub := pg.Last_deep_scrub_stamp
     deep_scrub_start := time.Now()
 
-    fmt.Printf("Deep-scrubbing: %s %s\n", string(pg.PG_id), last_deep_scrub)
+    fmt.Printf("Deep-scrubbing: %s last deep-scrub on [%s] (%v ago)\n", string(pg.PG_id), last_deep_scrub, time.Now().Sub(pg.Last_deep_scrub_stamp.Time))
 
     err := ceph.RunCephCommand(fmt.Sprintf(c.Deep_scrub_command, pg.PG_id), nil)
     if err != nil { log.Fatal(err) }
@@ -70,7 +71,7 @@ func Scrub_pg(c *ceph.Ceph, pg ceph.PG_info) {
     pgInfo := ceph.PG_query{};
 
     for {
-        time.Sleep(100 * time.Millisecond)
+        time.Sleep(500 * time.Millisecond)
 
         err = ceph.RunCephCommand(fmt.Sprintf(c.PG_query_command, pg.PG_id), &pgInfo)
         if err != nil { log.Fatal(err) }
@@ -91,29 +92,43 @@ func Scrub_pg(c *ceph.Ceph, pg ceph.PG_info) {
     }
 }
 
+
 func Check_pg(c *ceph.Ceph, pg ceph.PG_info) bool {
     
-    for name, check := range checks_map {
+    for name, check := range c.Checks_map {
+
         switch cr := check.Check(c, pg); cr {
             case "CHECK_WAIT": {
-                fmt.Println(name + " " + check.GetFailureMessage())
-                time.Sleep(3 * time.Second)
+                time.Sleep(5 * time.Second)
 
-                for {
-                    switch rerun := check.Check(c, pg); rerun {
+                for ; cr != "CHECK_OK"; {
+ 
+                    switch cr = check.Check(c, pg); cr {
                         case "CHECK_WAIT": {
-                            time.Sleep(3 * time.Second)
+			    fmt.Printf("Check %s failed on pg %s [%s]\n", name, pg.PG_id, cr)
+                            time.Sleep(5 * time.Second)
                         }
                         case "CHECK_SKIP": {
+			    fmt.Printf("Check \"%s\" failed on pg %s - [%s]\n", name, pg.PG_id, cr)
                             return false
                         }
+			case "CHECK_OK": {
+			}
+			default: {
+			    log.Fatal("!!! UNKNOWN status (%s) returned by check \"%s\"", cr, name) 
+			}
                     }
                 }
             }
             case "CHECK_SKIP": {
-                fmt.Println(name + " skipping pg")
+		fmt.Printf("Check %s failed on pg %s [%s]\n", name, pg.PG_id, cr)
                 return false
             }
+	    case "CHECK_OK": {
+	    }
+	    default: {
+		log.Fatal("!!! UNKNOWN status (%s) returned by check \"%s\"", cr, name) 
+	    }
         }
     }
 
