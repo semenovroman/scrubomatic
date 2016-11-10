@@ -94,42 +94,45 @@ func Scrub_pg(c *ceph.Ceph, pg ceph.PG_info) {
 
 
 func Check_pg(c *ceph.Ceph, pg ceph.PG_info) bool {
-    
+
     for name, check := range c.Checks_map {
 
-        switch cr := check.Check(c, pg); cr {
+        switch cr, err := check.Check(c, pg); cr {
             case "CHECK_WAIT": {
                 time.Sleep(5 * time.Second)
 
+                fmt.Printf(err.Error())
+
                 for ; cr != "CHECK_OK"; {
- 
-                    switch cr = check.Check(c, pg); cr {
+
+                    switch cr, err = check.Check(c, pg); cr {
                         case "CHECK_WAIT": {
-			    fmt.Printf("Check %s failed on pg %s [%s]\n", name, pg.PG_id, cr)
+			                fmt.Printf("Check %s failed on pg %s [%s]\n", name, pg.PG_id, cr)
                             time.Sleep(5 * time.Second)
                         }
                         case "CHECK_SKIP": {
-			    fmt.Printf("Check \"%s\" failed on pg %s - [%s]\n", name, pg.PG_id, cr)
+			                fmt.Printf("Check \"%s\" failed on pg %s - [%s]\n", name, pg.PG_id, cr)
                             return false
                         }
-			case "CHECK_OK": {
-			}
-			default: {
-			    log.Fatal("!!! UNKNOWN status (%s) returned by check \"%s\"", cr, name) 
-			}
+			            case "CHECK_OK": {
+			            }
+			            default: {
+			                     log.Fatal("!!! UNKNOWN status (%s) returned by check \"%s\"", cr, name)
+			            }
                     }
                 }
             }
             case "CHECK_SKIP": {
-		fmt.Printf("Check %s failed on pg %s [%s]\n", name, pg.PG_id, cr)
-                return false
+		          fmt.Printf("Check %s failed on pg %s [%s]\n", name, pg.PG_id, cr)
+                  return false
             }
-	    case "CHECK_OK": {
-	    }
-	    default: {
-		log.Fatal("!!! UNKNOWN status (%s) returned by check \"%s\"", cr, name) 
-	    }
+	        case "CHECK_OK": {
+	        }
+	        default: {
+		          log.Fatal("!!! UNKNOWN status (%s) returned by check \"%s\"", cr, name)
+	        }
         }
+
     }
 
     return true
